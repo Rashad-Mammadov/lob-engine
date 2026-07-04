@@ -39,6 +39,7 @@ The architecture is mathematically proven to be lock-free by observing the kerne
 
 *Figure 2: `htop` telemetry captured during the 12,000+ RPS flood. The Nginx reverse proxy and the 32-thread `cpp-httplib` gateway uniformly saturate all 8 logical cores without context-switching bottlenecks, while the matching engine processes the lock-free ring buffer in the background.*
 
+> **Note on Remote Benchmarking:** This local command targets `localhost` to isolate the C++ engine and measure pure algorithmic throughput. If you run `wrk` against the live remote deployment (`http://130.61.142.132`), the total Requests Per Second (RPS) will drop significantly. This is not a software bottleneck, but a physical limitation of geographic network latency leaving the connections idle. To properly stress-test the remote server, you must massively increase the concurrent connections (e.g., `-c5000`) to compensate for the round-trip delay and keep the network pipe full.
 ---
 
 ## Running the Project Locally
