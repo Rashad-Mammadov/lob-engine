@@ -69,7 +69,7 @@ Open a second terminal and boot the WebSocket observer to watch the execution pi
 sudo apt install python3-websockets
 python3 market_data_client.py
 ```
-*(As you fire the integration tests in Terminal 1, the executions will stream natively into Terminal 2).*
+*(As you fire the integration or benchmark tests in Terminal 1, the executions will stream natively into Terminal 2).*
 
 ### 4. Stress Test the Architecture
 To replicate the 10,000+ RPS synthetic flood and trigger the backpressure circuit breakers, run the included Lua benchmark:
