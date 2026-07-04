@@ -27,12 +27,16 @@ This engine was built from the ground up to avoid kernel locks, minimize L1/L2 c
 Tested via `wrk` with 100 concurrent connections over 30 seconds on an 8-core machine. The goal of this benchmark was to push the arrival rate past the processing rate to verify the integrity of the engine's backpressure mechanisms.
 
 ![wrk Benchmark Results](images/wrk_benchmark.png)
+
+
 *Figure 1: Benchmark results demonstrating ~12,400 Requests Per Second (RPS). The median latency sits at a highly stable 4.32ms. As the synthetic flood intentionally overfills the lock-free ring buffer, the tail latency rises (queueing theory in effect), and the gateway successfully sheds unmanageable load (30 Non-2xx responses) to preserve hardware memory and prevent cascading failure.*
 
 ### Hardware Saturation & Telemetry
 The architecture is mathematically proven to be lock-free by observing the kernel-level thread distribution under this maximum synthetic load.
 
 ![Engine CPU Telemetry](images/cpu_load.png)
+
+
 *Figure 2: `htop` telemetry captured during the 12,000+ RPS flood. The Nginx reverse proxy and the 32-thread `cpp-httplib` gateway uniformly saturate all 8 logical cores without context-switching bottlenecks, while the matching engine processes the lock-free ring buffer in the background.*
 
 ---
@@ -48,7 +52,7 @@ The architecture is mathematically proven to be lock-free by observing the kerne
 ### 1. Build and Start the Engine
 Clone the repository and boot the decoupled architecture (C++ Engine + Nginx Proxy):
 ```bash
-git clone [https://github.com/Rashad-Mammadov/lob-engine.git](https://github.com/Rashad-Mammadov/lob-engine.git)
+git clone https://github.com/Rashad-Mammadov/lob-engine.git
 cd lob-engine
 docker compose up -d --build
 ```
@@ -118,6 +122,6 @@ The current engine is incredibly fast, but there are some places to optimize fur
 
 * **Direct Memory Pointers (Instant Cancels):** Currently, canceling an order is fast, but the engine still has to do a quick search through the line of orders at that specific price level to remove it. I plan to fix this by using direct memory links. I am planning to update the tracker so it holds a direct cable to the exact order in memory, allowing the engine to "unplug" and delete it instantly without doing any searching at all.
 
-**Level 3 Market Data (Full Market Visibility):** The current live feed only broadcasts when a trade actually executes, which saves network bandwidth. In the future, I plan to add a full "Level 3" data firehose. This will broadcast every single action in real-time: every new order, every cancellation, and every trade. This allows external algorithmic traders to recreate an exact, real-time copy of the market on their own machines.
+* **Level 3 Market Data (Full Market Visibility):** The current live feed only broadcasts when a trade actually executes, which saves network bandwidth. In the future, I plan to add a full "Level 3" data firehose. This will broadcast every single action in real-time: every new order, every cancellation, and every trade. This allows external algorithmic traders to recreate an exact, real-time copy of the market on their own machines.
 
 * **Trading Multiple Assets at Once:** The engine currently focuses on trading a single asset. The next step is to upgrade it to handle hundreds of different trading assets at the same time.
