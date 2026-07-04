@@ -47,7 +47,7 @@ The architecture is mathematically proven to be lock-free by observing the kerne
 ### Prerequisites
 * Docker & Docker Compose
 * Python 3 for integration testing
-* python3-websockets for live engine simulation
+* python3-websockets to watch the execution pipeline stream in real-time
 * wrk for benchmark testing
 
 ### 1. Build and Start the Engine
