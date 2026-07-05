@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
 project(LOBEngine)
 
-# Enforce C++17 standard for std::shared_mutex and updated standard library features
+# Enforce C++20 standard for std::shared_mutex and updated standard library features
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
