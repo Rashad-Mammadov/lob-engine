@@ -15,8 +15,6 @@ This engine was built from the ground up to avoid kernel locks, minimize L1/L2 c
 
 * **Lock-Free Ingestion (Control Plane):** An Nginx reverse proxy routes HTTP traffic to a 32-thread `cpp-httplib` gateway. Orders are instantly pushed into a power-of-two (65,536) atomic Ring Buffer, allowing network threads to yield immediately without blocking the core engine.
 * **Deterministic Matching:** A single, dedicated CPU thread pops orders from the ring buffer and matches them using $O(\log N)$ Red-Black trees (`std::map`).
-* **O(1) Cancellation Tracking:** Active orders are tracked in an auxiliary `std::unordered_map`. Cancellation requests bypass the price queues, targeting and eradicating nodes in $O(1)$ lookup time.
-* **Targeted Cancellation Tracking:** Active orders are mapped in an auxiliary `std::unordered_map` for $O(1)$ price-level lookups. This completely bypasses linear book scanning, allowing the background thread to jump directly to the target Red-Black tree node and eradicate the order in $O(\log N)$ time.
 * **Fast Order Cancellation:** Active orders are tracked in a separate hash map. When a trader cancels an order, the engine uses this hash map to instantly look up the exact price level. It then jumps straight to that specific price in the tree and removes the order.
 * **Hardware Preservation (Load Shedding):** If the arrival rate ($\lambda$) exceeds the processing rate ($\mu$) and the ring buffer fills, the gateway instantly rejects traffic with `429 Too Many Requests` rather than holding TCP connections hostage.
 * **Asynchronous Data Plane:** Executed trades are pushed to an outbound ring buffer. A dedicated `asio`/`websocketpp` thread handles JSON serialization and broadcasts the market feed, completely bypassing the Nginx proxy to reduce latency.
@@ -117,7 +115,7 @@ wrk -t4 -c100 -d30s -s benchmark.lua --latency http://localhost
 
 ## Future Work / Optimizations
 
-The current engine is incredibly fast, but there are some places to optimize further. Plans for the next version(s):
+The current engine is quite fast, but there are some places to optimize further. Plans for the next version(s):
 
 * **Flat Arrays and a Bitmask Tree (Fixing the Constant Factor):** Right now, the engine uses a tree structure (`std::map`). While its theoretical speed looks good on paper, `std::map` suffers from a notoriously high **constant factor**. The hidden, real-world costs of chasing memory pointers across the RAM and constantly rebalancing the tree make every single operation surprisingly expensive. I am planning to replace the tree with a giant, flat array of prices. To find the Best Bid or Ask instantly, I will overlay a **shallow tree of bitmasks (exactly 3 levels deep)**. This acts as a map of 1s and 0s that the physical CPU can jump through in exactly three hardware steps, entirely skipping empty price levels. This completely eliminates the constant factor overhead, making price tracking truly O(1).
 
